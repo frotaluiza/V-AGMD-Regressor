@@ -1,0 +1,42 @@
+# Python
+__pycache__/
+*.py[cod]
+*.so
+*.egg-info/
+dist/
+build/
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# Environment
+.env
+venv/
+.venv/
+env/
+
+# Results (timestamped run directories)
+stage0_*/
+stage1_*/
+stage2_*/
+results_*/
+test_*/
+oof_all_models/
+
+# Logs
+*.log
+*.err
+
+# Misc
+*.txt
+stage1_focused_startup.txt
+
+# OS
+Thumbs.db
+.DS_Store
+
+# Config with local paths (keep config.yaml template, ignore user-specific overrides)
+# config.yaml itself is tracked — create a local override via config_local.yaml if needed

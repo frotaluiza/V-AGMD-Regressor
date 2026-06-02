@@ -1,0 +1,31 @@
+data:
+  path: "C:\\Users\\frota\\OneDrive\\Documentos\\TCC\\dados_att_com_var_com_phy.csv"
+  decimal: ","
+  separator: ","
+  group_col: "Regime"
+  origin_col: "Origem_dados"
+
+columns:
+  features:
+    - Alim_T_in
+    - Ref_T_in
+    - Ref_V_in
+    - P_vacuum
+    - C_NaCl
+  targets:
+    - Alim_T_out
+    - Ref_T_out
+    - Flux
+  model_map:
+    Alim_T_out: Alim_T_out_phy
+    Ref_T_out: Ref_T_out_phy
+    Flux: Flux_phy_L_m2_h
+
+training:
+  seed: 42
+  n_splits: 3
+  early_stop_patience: 12
+  early_stop_min_delta: 0.0001
+  reduce_lr_factor: 0.5
+  reduce_lr_patience: 4
+  reduce_lr_min_lr: 0.000001
