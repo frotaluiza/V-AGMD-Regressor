@@ -24,10 +24,9 @@ import numpy as np
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 
 from config import (
-    SEED, N_SPLITS, FEATURE_COLS, TARGET_COLS, GROUP_COL,
+    SEED, N_SPLITS, FEATURE_COLS, TARGET_COLS, GROUP_COL, ORIGIN_COL,
     N_FEATURES_BASE, N_TARGETS, N_FEATURES_PLUS_PHY, FLUX_INDEX, MODEL_MAP,
-    DEFAULT_GAP_FILTER_TOL, DEFAULT_USE_GAP_FILTER, DEFAULT_USE_GAP_TIEBREAK,
-    KERAS_CALLBACKS,
+    DATA_PATH, KERAS_CALLBACKS,
 )
 from data import read_tabular_csv, build_XY_groups_with_model_map
 from selection import make_neg_rmse_single_true_target_scorer, C_keras_mlp
@@ -35,12 +34,12 @@ from runner import FamilySpec, run_family, winners_table
 from sweep import build_hrnn_restricted_grid_from_baseline
 from file_io import save_outputs
 from models.keras_builders import KERAS_AVAILABLE, make_keras_mlp_hrnn_estimator
-from sklearn.model_selection import GroupKFold
+from cv import make_cv, resolve_n_splits
 
 
 def parse_cli_args():
     parser = argparse.ArgumentParser(description="Run only KerasMLP_ZohanHRNN_Restricted with fixed baseline params.")
-    parser.add_argument("--csv", type=str, required=True, help="Path to input CSV dataset.")
+    parser.add_argument("--csv", type=str, default=str(DATA_PATH), help="Path to input CSV dataset.")
     return parser.parse_args()
 
 
@@ -157,19 +156,18 @@ def main():
             complexity_fn=C_keras_mlp,
             n_jobs=1,
             scale_y=True,
-            use_gap_filter=DEFAULT_USE_GAP_FILTER,
-            gap_filter_tol=DEFAULT_GAP_FILTER_TOL,
-            use_gap_tiebreak=DEFAULT_USE_GAP_TIEBREAK,
         ),
     ]
 
     df = read_tabular_csv(DATA_CSV_PATH, decimal_comma=True, sep=",", logger=logger)
-    X, Y_true, groups, used_df, Y_model, _ = build_XY_groups_with_model_map(
+    origin_col = ORIGIN_COL if ORIGIN_COL in df.columns else None
+    X, Y_true, groups, used_df, Y_model, origin_values = build_XY_groups_with_model_map(
         df=df, feature_cols=FEATURE_COLS, target_cols=TARGET_COLS,
-        group_col=GROUP_COL, dropna=True, model_map=MODEL_MAP, logger=logger,
+        group_col=GROUP_COL, dropna=True, model_map=MODEL_MAP,
+        origin_col=origin_col, logger=logger,
     )
-
-    cv = GroupKFold(n_splits=N_SPLITS)
+    n_splits = resolve_n_splits(groups, config_n_splits=N_SPLITS)
+    cv, eval_mask = make_cv(n_splits, origin_values=origin_values, logger=logger)
 
     winners = []
     for spec in families:

@@ -29,11 +29,10 @@ sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 from config import (
     SEED, N_SPLITS, FEATURE_COLS, TARGET_COLS, GROUP_COL, ORIGIN_COL,
     N_FEATURES_BASE, N_TARGETS, N_FEATURES_PLUS_PHY, FLUX_INDEX, MODEL_MAP,
-    DEFAULT_GAP_FILTER_TOL, DEFAULT_USE_GAP_FILTER, DEFAULT_USE_GAP_TIEBREAK,
-    KERAS_CALLBACKS,
+    DATA_PATH, KERAS_CALLBACKS,
 )
 from data import read_tabular_csv, build_XY_groups_with_model_map
-from cv import make_cv
+from cv import make_cv, resolve_n_splits
 from selection import make_neg_rmse_single_true_target_scorer, C_keras_mlp
 from selection import COMPLEXITY_MAP
 from runner import FamilySpec, run_family, winners_table, _make_scaled_pipeline, _resolve_estimator
@@ -57,7 +56,7 @@ from models.keras_builders import (
 
 def parse_cli_args():
     parser = argparse.ArgumentParser(description="Unified model selection runner for AGMD datasets.")
-    parser.add_argument("--csv", type=str, required=True, help="Path to the input CSV dataset.")
+    parser.add_argument("--csv", type=str, default=str(DATA_PATH), help="Path to the input CSV dataset.")
     return parser.parse_args()
 
 
@@ -134,6 +133,7 @@ def run_model_selection_from_csv(
         origin_col=effective_origin_col, logger=logger,
     )
 
+    n_splits = resolve_n_splits(groups, config_n_splits=n_splits)
     cv, eval_mask = make_cv(n_splits, origin_values=origin_values, logger=logger)
 
     only_set = set(run_only_families) if run_only_families is not None else None
@@ -215,43 +215,36 @@ def main():
     classical_families = [
         FamilySpec(name="OLS", estimator=make_ols, search="grid", param_grid={},
                    complexity_fn=COMPLEXITY_MAP.get("OLS"), n_jobs=1, scale_y=True,
-                   use_gap_filter=DEFAULT_USE_GAP_FILTER, gap_filter_tol=DEFAULT_GAP_FILTER_TOL,
-                   use_gap_tiebreak=DEFAULT_USE_GAP_TIEBREAK),
+                   ),
         FamilySpec(name="Ridge", estimator=make_ridge, search="grid",
                    param_grid={"model__alpha": [1e-3, 1e-2, 1e-1, 1, 10, 100]},
                    complexity_fn=COMPLEXITY_MAP.get("Ridge"), n_jobs=1, scale_y=True,
-                   use_gap_filter=DEFAULT_USE_GAP_FILTER, gap_filter_tol=DEFAULT_GAP_FILTER_TOL,
-                   use_gap_tiebreak=DEFAULT_USE_GAP_TIEBREAK),
+                   ),
         FamilySpec(name="Lasso_MultiTask", estimator=make_lasso_multitask, search="grid",
                    param_grid={"model__alpha": [1e-4, 1e-3, 1e-2, 1e-1, 1]},
                    complexity_fn=COMPLEXITY_MAP.get("Lasso_MultiTask"), n_jobs=1, scale_y=True,
-                   use_gap_filter=DEFAULT_USE_GAP_FILTER, gap_filter_tol=DEFAULT_GAP_FILTER_TOL,
-                   use_gap_tiebreak=DEFAULT_USE_GAP_TIEBREAK),
+                   ),
         FamilySpec(name="ElasticNet_MultiTask", estimator=make_elasticnet_multitask, search="grid",
                    param_grid={"model__alpha": [1e-4, 1e-3, 1e-2, 1e-1, 1],
                                 "model__l1_ratio": [0.1, 0.3, 0.5, 0.7, 0.9]},
                    complexity_fn=COMPLEXITY_MAP.get("ElasticNet_MultiTask"), n_jobs=1, scale_y=True,
-                   use_gap_filter=DEFAULT_USE_GAP_FILTER, gap_filter_tol=DEFAULT_GAP_FILTER_TOL,
-                   use_gap_tiebreak=DEFAULT_USE_GAP_TIEBREAK),
+                   ),
         FamilySpec(name="Lasso_Indep(MultiOutputRegressor)", estimator=make_lasso_indep, search="grid",
                    param_grid={"model__estimator__alpha": [1e-4, 1e-3, 1e-2, 1e-1, 1]},
                    complexity_fn=COMPLEXITY_MAP.get("Lasso_Indep(MultiOutputRegressor)"), n_jobs=1, scale_y=True,
-                   use_gap_filter=DEFAULT_USE_GAP_FILTER, gap_filter_tol=DEFAULT_GAP_FILTER_TOL,
-                   use_gap_tiebreak=DEFAULT_USE_GAP_TIEBREAK),
+                   ),
         FamilySpec(name="ElasticNet_Indep(MultiOutputRegressor)", estimator=make_elasticnet_indep, search="grid",
                    param_grid={"model__estimator__alpha": [1e-4, 1e-3, 1e-2, 1e-1, 1],
                                 "model__estimator__l1_ratio": [0.1, 0.3, 0.5, 0.7, 0.9]},
                    complexity_fn=COMPLEXITY_MAP.get("ElasticNet_Indep(MultiOutputRegressor)"), n_jobs=1, scale_y=True,
-                   use_gap_filter=DEFAULT_USE_GAP_FILTER, gap_filter_tol=DEFAULT_GAP_FILTER_TOL,
-                   use_gap_tiebreak=DEFAULT_USE_GAP_TIEBREAK),
+                   ),
         FamilySpec(name="DT", estimator=make_dt, search="grid",
                    param_grid={"model__max_depth": [2, 3, 4, 5, 6, None],
                                 "model__min_samples_leaf": [1, 2, 5, 8, 10],
                                 "model__min_samples_split": [2, 5, 10, 15],
                                 "model__ccp_alpha": [0.0, 1e-4, 1e-3, 1e-2]},
                    complexity_fn=COMPLEXITY_MAP.get("DT"), n_jobs=1, scale_y=True,
-                   use_gap_filter=DEFAULT_USE_GAP_FILTER, gap_filter_tol=DEFAULT_GAP_FILTER_TOL,
-                   use_gap_tiebreak=DEFAULT_USE_GAP_TIEBREAK),
+                   ),
         FamilySpec(name="RF", estimator=make_rf, search="grid",
                    param_grid={"model__n_estimators": [200, 400, 600],
                                 "model__max_depth": [2, 3, 4, 5, None],
@@ -259,8 +252,7 @@ def main():
                                 "model__min_samples_split": [2, 5, 10],
                                 "model__max_features": [0.5, 0.8, 1.0]},
                    complexity_fn=COMPLEXITY_MAP.get("RF"), n_jobs=1, scale_y=True,
-                   use_gap_filter=DEFAULT_USE_GAP_FILTER, gap_filter_tol=DEFAULT_GAP_FILTER_TOL,
-                   use_gap_tiebreak=DEFAULT_USE_GAP_TIEBREAK),
+                   ),
         FamilySpec(name="GB", estimator=make_gb, search="grid",
                    param_grid={"model__estimator__n_estimators": [50, 100, 200, 400],
                                 "model__estimator__learning_rate": [0.01, 0.03, 0.05, 0.1],
@@ -269,15 +261,13 @@ def main():
                                 "model__estimator__subsample": [0.6, 0.8, 1.0]},
                    complexity_fn=COMPLEXITY_MAP.get("GB"), n_jobs=1,
                    force_multioutput_wrapper=True, scale_y=True,
-                   use_gap_filter=DEFAULT_USE_GAP_FILTER, gap_filter_tol=DEFAULT_GAP_FILTER_TOL,
-                   use_gap_tiebreak=DEFAULT_USE_GAP_TIEBREAK),
+                   ),
         FamilySpec(name="MLP_sklearn", estimator=make_mlp_sklearn, search="grid",
                    param_grid={"model__hidden_layer_sizes": [(32,), (64,), (64, 32), (128, 64)],
                                 "model__alpha": [0.0, 1e-6, 1e-5, 1e-4],
                                 "model__learning_rate_init": [3e-3, 1e-3, 3e-4, 1e-4]},
                    complexity_fn=COMPLEXITY_MAP.get("MLP_sklearn"), n_jobs=1, scale_y=True,
-                   use_gap_filter=DEFAULT_USE_GAP_FILTER, gap_filter_tol=DEFAULT_GAP_FILTER_TOL,
-                   use_gap_tiebreak=DEFAULT_USE_GAP_TIEBREAK),
+                   ),
     ]
 
     if not KERAS_AVAILABLE:
@@ -358,8 +348,6 @@ def main():
         search="random", param_grid=keras_mlp_grid, n_iter=10,
         x_mode="x", y_mode="true", complexity_fn=C_keras_mlp,
         n_jobs=1, scale_y=True,
-        use_gap_filter=DEFAULT_USE_GAP_FILTER, gap_filter_tol=DEFAULT_GAP_FILTER_TOL,
-        use_gap_tiebreak=DEFAULT_USE_GAP_TIEBREAK,
     )
 
     logger.info("=" * 72)
@@ -393,32 +381,27 @@ def main():
                    search="random", param_grid=frozen_baseline_grid, n_iter=5,
                    x_mode="x", y_mode="true", complexity_fn=C_keras_mlp,
                    n_jobs=1, scale_y=True,
-                   use_gap_filter=DEFAULT_USE_GAP_FILTER, gap_filter_tol=DEFAULT_GAP_FILTER_TOL,
-                   use_gap_tiebreak=DEFAULT_USE_GAP_TIEBREAK),
+                   ),
         FamilySpec(name="KerasMLP_Luc_Restricted", estimator=make_keras_mlp_luc_estimator,
                    search="random", param_grid=luc_restricted_grid, n_iter=5,
                    x_mode="x", y_mode="true_plus_model", scoring=luc_rmse_scorer,
                    complexity_fn=C_keras_mlp, n_jobs=1, scale_y=True,
-                   use_gap_filter=DEFAULT_USE_GAP_FILTER, gap_filter_tol=DEFAULT_GAP_FILTER_TOL,
-                   use_gap_tiebreak=DEFAULT_USE_GAP_TIEBREAK),
+                   ),
         FamilySpec(name="KerasMLP_ZohanHPD_Restricted", estimator=make_keras_mlp_estimator,
                    search="random", param_grid=hpd_restricted_grid, n_iter=5,
                    x_mode="x_plus_model", y_mode="true", complexity_fn=C_keras_mlp,
                    n_jobs=1, scale_y=True,
-                   use_gap_filter=DEFAULT_USE_GAP_FILTER, gap_filter_tol=DEFAULT_GAP_FILTER_TOL,
-                   use_gap_tiebreak=DEFAULT_USE_GAP_TIEBREAK),
+                   ),
         FamilySpec(name="KerasMLP_ZohanResidual_Restricted", estimator=make_keras_mlp_residual_x_only_estimator,
                    search="random", param_grid=residual_restricted_grid, n_iter=5,
                    x_mode="x_plus_model", y_mode="true", complexity_fn=C_keras_mlp,
                    n_jobs=1, scale_y=True,
-                   use_gap_filter=DEFAULT_USE_GAP_FILTER, gap_filter_tol=DEFAULT_GAP_FILTER_TOL,
-                   use_gap_tiebreak=DEFAULT_USE_GAP_TIEBREAK),
+                   ),
         FamilySpec(name="KerasMLP_ZohanHRNN_Restricted", estimator=make_keras_mlp_hrnn_estimator,
                    search="random", param_grid=hrnn_restricted_grid, n_iter=5,
                    x_mode="x_plus_model", y_mode="true", complexity_fn=C_keras_mlp,
                    n_jobs=1, scale_y=True,
-                   use_gap_filter=DEFAULT_USE_GAP_FILTER, gap_filter_tol=DEFAULT_GAP_FILTER_TOL,
-                   use_gap_tiebreak=DEFAULT_USE_GAP_TIEBREAK),
+                   ),
     ]
 
     logger.info("=" * 72)

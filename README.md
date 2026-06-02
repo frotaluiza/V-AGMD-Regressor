@@ -132,11 +132,15 @@ Compares 4 hybrid strategies, each with 5 random search iterations:
 
 Output goes to `stage2_only_<dataset>_<timestamp>/stage2_restricted_hybrid_comparison/`.
 
-### Full Pipeline
+### Full Pipeline (All Stages)
 ```powershell
-python scripts/run_all.py         # Runs all stages sequentially
-python scripts/run_pipeline.py    # Alternative full pipeline entry
+python scripts/run_all.py                       # Uses default data path from config.yaml
+python scripts/run_all.py --csv "path/to.csv"   # Or point to a different CSV
+python scripts/run_pipeline.py                  # Alternative full pipeline entry
+python scripts/run_hrnn_only.py                 # Run only the HRNN hybrid model
 ```
+
+All scripts read their configuration from `config.yaml` automatically. The `--csv` argument is optional — if omitted, the path from `config.yaml` is used.
 
 ## Outputs
 
@@ -220,6 +224,22 @@ def _exp_yerr(yt, target_name):
         return 0.10 * np.abs(yt)   # 10%
     return np.full_like(yt, 1.0)    # 1 °C
 ```
+
+## Full Modularity
+
+All components of this framework are designed to be fully modular:
+
+| Layer | Customization |
+|---|---|
+| **Data** | Column mapping in `config.yaml` (features, targets, model_map, group_col) |
+| **Models** | Keras builders in `models/keras_builders.py`, classical models in `models/classical.py` |
+| **Pipeline** | Stage 1 (baseline search), Stage 2 (hybrid comparison), or full pipeline via `run_all.py` |
+| **Selection** | Refit rule in `selection.py` (1-SE + min complexity) |
+| **Sweeps** | Parameter sensitivity in `sweep.py` |
+| **Plots** | All plot functions in `plots.py` — error bar magnitudes, colors, labels |
+| **Output** | All CSVs and plots are saved automatically under timestamped directories |
+
+Every script (`stage1_focused.py`, `stage2_focused.py`, `run_all.py`, `run_pipeline.py`, `run_hrnn_only.py`) reads from `config.yaml` — **no hardcoded paths or columns** in the code.
 
 ## License
 
