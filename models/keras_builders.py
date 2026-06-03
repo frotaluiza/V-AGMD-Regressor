@@ -269,6 +269,71 @@ def build_keras_mlp_hrnn_residual_xyphy(
     return model
 
 
+def build_keras_mlp_dropout(
+    *,
+    n_features_in_=None, n_outputs_=None, n_features=None, n_targets=None,
+    hidden_layer_sizes=(64, 32), activation="relu",
+    optimizer="adam", learning_rate=1e-3, loss="mse", huber_delta=1.0, l2=0.0, dropout_rate=0.10,
+    clipnorm=1.0,
+    **kwargs,
+) -> tf.keras.Model:
+    nf, nt = _infer_n_features_targets(
+        n_features_in_=n_features_in_, n_outputs_=n_outputs_,
+        n_features=n_features, n_targets=n_targets, **kwargs,
+    )
+    opt = _make_optimizer(optimizer, learning_rate, clipnorm=clipnorm)
+    reg = tf.keras.regularizers.l2(float(l2)) if (l2 is not None and float(l2) > 0) else None
+    loss_obj = tf.keras.losses.Huber(delta=float(huber_delta)) if (isinstance(loss, str) and loss.lower() == "huber") else loss
+
+    inputs = tf.keras.Input(shape=(nf,))
+    x = inputs
+    for i, u in enumerate(hidden_layer_sizes):
+        x = tf.keras.layers.Dense(int(u), activation=str(activation), kernel_regularizer=reg)(x)
+        if i < len(hidden_layer_sizes) - 1:
+            x = tf.keras.layers.Dropout(float(dropout_rate))(x)
+    outputs = tf.keras.layers.Dense(int(nt), activation="linear")(x)
+
+    model = tf.keras.Model(inputs=inputs, outputs=outputs)
+    model.compile(optimizer=opt, loss=loss_obj)
+    return model
+
+
+def build_keras_mlp_residual_dropout(
+    *,
+    n_features_in_=None, n_outputs_=None, n_features=None, n_targets=None,
+    hidden_layer_sizes=(64, 32), activation="relu",
+    optimizer="adam", learning_rate=1e-3, loss="mse", huber_delta=1.0, l2=0.0, dropout_rate=0.10,
+    **kwargs,
+) -> tf.keras.Model:
+    nf, nt = _infer_n_features_targets(
+        n_features_in_=n_features_in_, n_outputs_=n_outputs_,
+        n_features=n_features, n_targets=n_targets, **kwargs,
+    )
+    if int(nf) <= int(nt):
+        raise ValueError("Residual dropout expects n_features_total > n_targets (X + y_phy).")
+
+    opt = _make_optimizer(optimizer, learning_rate)
+    reg = tf.keras.regularizers.l2(float(l2)) if (l2 is not None and float(l2) > 0) else None
+    loss_obj = tf.keras.losses.Huber(delta=float(huber_delta)) if (isinstance(loss, str) and loss.lower() == "huber") else loss
+
+    inputs = tf.keras.Input(shape=(nf,))
+    x_part = SliceXPart(nt, name="X_part")(inputs)
+    y_phy = SliceYPhyPart(nt, name="Yphy_part")(inputs)
+
+    h = x_part
+    for i, u in enumerate(hidden_layer_sizes):
+        h = tf.keras.layers.Dense(int(u), activation=str(activation), kernel_regularizer=reg)(h)
+        if i < len(hidden_layer_sizes) - 1:
+            h = tf.keras.layers.Dropout(float(dropout_rate))(h)
+
+    y_res = tf.keras.layers.Dense(int(nt), activation="linear", name="Yres")(h)
+    y_hat = tf.keras.layers.Add(name="Yhat")([y_phy, y_res])
+
+    model = tf.keras.Model(inputs=inputs, outputs=y_hat)
+    model.compile(optimizer=opt, loss=loss_obj)
+    return model
+
+
 def make_keras_mlp_estimator(n_targets: int):
     return KerasRegressor(model=build_keras_mlp, verbose=0)
 
@@ -283,3 +348,11 @@ def make_keras_mlp_residual_x_only_estimator(n_targets: int):
 
 def make_keras_mlp_hrnn_estimator(n_targets: int):
     return KerasRegressor(model=build_keras_mlp_hrnn_residual_xyphy, verbose=0)
+
+
+def make_keras_mlp_dropout_estimator(n_targets: int):
+    return KerasRegressor(model=build_keras_mlp_dropout, verbose=0)
+
+
+def make_keras_mlp_residual_dropout_estimator(n_targets: int):
+    return KerasRegressor(model=build_keras_mlp_residual_dropout, verbose=0)

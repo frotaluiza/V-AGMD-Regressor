@@ -12,9 +12,11 @@ from data import read_tabular_csv, build_XY_groups_with_model_map
 from cv import make_cv, resolve_n_splits
 from selection import make_neg_rmse_single_true_target_scorer, C_keras_mlp
 from sweep import (build_frozen_baseline_grid, build_luc_restricted_grid_from_baseline,
-                   build_hpd_restricted_grid_from_baseline,
-                   build_residual_restricted_grid_from_baseline,
-                   build_hrnn_restricted_grid_from_baseline)
+                    build_hpd_restricted_grid_from_baseline,
+                    build_residual_restricted_grid_from_baseline,
+                    build_hrnn_restricted_grid_from_baseline,
+                    build_dropout_baseline_grid,
+                    build_residual_dropout_grid_from_baseline)
 from runner import FamilySpec, run_family, winners_table
 from file_io import save_outputs
 from consolidate import consolidate_results
@@ -72,12 +74,18 @@ def main():
 
     from models.keras_builders import (make_keras_mlp_estimator, make_keras_mlp_luc_estimator,
                                         make_keras_mlp_residual_x_only_estimator,
-                                        make_keras_mlp_hrnn_estimator)
+                                        make_keras_mlp_hrnn_estimator,
+                                        make_keras_mlp_dropout_estimator,
+                                        make_keras_mlp_residual_dropout_estimator)
 
     frozen_baseline_grid = build_frozen_baseline_grid(best_params, N_FEATURES_BASE, N_TARGETS)
     luc_restricted_grid = build_luc_restricted_grid_from_baseline(best_params, N_FEATURES_BASE, N_TARGETS)
     hpd_restricted_grid = build_hpd_restricted_grid_from_baseline(best_params, N_FEATURES_PLUS_PHY, N_TARGETS)
     residual_restricted_grid = build_residual_restricted_grid_from_baseline(best_params, N_FEATURES_PLUS_PHY, N_TARGETS)
+    hrnn_restricted_grid = build_hrnn_restricted_grid_from_baseline(best_params, N_FEATURES_PLUS_PHY, N_TARGETS)
+
+    dropout_baseline_grid = build_dropout_baseline_grid(best_params, N_FEATURES_BASE, N_TARGETS)
+    residual_dropout_grid = build_residual_dropout_grid_from_baseline(best_params, N_FEATURES_PLUS_PHY, N_TARGETS)
 
     stage2_families = [
         FamilySpec(name="KerasMLP_FrozenBaseline", estimator=make_keras_mlp_estimator,
@@ -94,6 +102,19 @@ def main():
                    n_jobs=1, scale_y=True),
         FamilySpec(name="KerasMLP_ZohanResidual_Restricted", estimator=make_keras_mlp_residual_x_only_estimator,
                    search="random", param_grid=residual_restricted_grid, n_iter=5,
+                   x_mode="x_plus_model", y_mode="true", complexity_fn=C_keras_mlp,
+                   n_jobs=1, scale_y=True),
+        # Dropout architectures (from R tf.keras baseline)
+        FamilySpec(name="KerasMLP_DropoutBaseline", estimator=make_keras_mlp_dropout_estimator,
+                   search="random", param_grid=dropout_baseline_grid, n_iter=8,
+                   x_mode="x", y_mode="true", complexity_fn=C_keras_mlp,
+                   n_jobs=1, scale_y=True),
+        FamilySpec(name="KerasMLP_ZohanResidual_Dropout", estimator=make_keras_mlp_residual_dropout_estimator,
+                   search="random", param_grid=residual_dropout_grid, n_iter=8,
+                   x_mode="x_plus_model", y_mode="true", complexity_fn=C_keras_mlp,
+                   n_jobs=1, scale_y=True),
+        FamilySpec(name="KerasMLP_ZohanHRNN_Restricted", estimator=make_keras_mlp_hrnn_estimator,
+                   search="random", param_grid=hrnn_restricted_grid, n_iter=5,
                    x_mode="x_plus_model", y_mode="true", complexity_fn=C_keras_mlp,
                    n_jobs=1, scale_y=True),
     ]

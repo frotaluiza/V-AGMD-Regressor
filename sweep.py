@@ -129,6 +129,34 @@ def build_residual_restricted_grid_from_baseline(
     return frozen
 
 
+def build_dropout_baseline_grid(
+    baseline_best_params: Dict[str, Any],
+    n_features_base: int,
+    n_targets: int,
+) -> Dict[str, List[Any]]:
+    frozen = extract_baseline_keras_fixed_params(baseline_best_params)
+    frozen["model__model__n_features"] = [n_features_base]
+    frozen["model__model__n_targets"] = [n_targets]
+    frozen["model__model__hidden_layer_sizes"] = [(64, 32)]
+    frozen["model__model__dropout_rate"] = [0.0, 0.05, 0.10, 0.15, 0.20]
+    frozen["model__model__l2"] = [0.0, 1e-6, 1e-5, 1e-4]
+    return frozen
+
+
+def build_residual_dropout_grid_from_baseline(
+    baseline_best_params: Dict[str, Any],
+    n_features_plus_phy: int,
+    n_targets: int,
+) -> Dict[str, List[Any]]:
+    frozen = extract_baseline_keras_fixed_params(baseline_best_params)
+    frozen["model__model__n_features"] = [n_features_plus_phy]
+    frozen["model__model__n_targets"] = [n_targets]
+    frozen["model__model__hidden_layer_sizes"] = [(64, 32)]
+    frozen["model__model__dropout_rate"] = [0.0, 0.05, 0.10, 0.15, 0.20]
+    frozen["model__model__l2"] = [0.0, 1e-6, 1e-5, 1e-4]
+    return frozen
+
+
 def build_hrnn_restricted_grid_from_baseline(
     baseline_best_params: Dict[str, Any],
     n_features_plus_phy: int,

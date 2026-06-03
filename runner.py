@@ -317,8 +317,10 @@ def run_family(
         raise ValueError(f"Family '{spec.name}' requires param_grid.")
 
     # Ensure fresh callbacks per family (sklearn clone cannot deep-copy TF callbacks)
-    fresh_cbs = _make_fresh_callbacks()
-    estimator.set_params(model__fit__callbacks=fresh_cbs)
+    try:
+        estimator.set_params(model__fit__callbacks=_make_fresh_callbacks())
+    except ValueError:
+        pass  # non-Keras models don't have model__fit__callbacks
     clean_grid = _filter_callbacks_from_grid(spec.param_grid)
 
     if spec.search == "random":
@@ -406,7 +408,10 @@ def run_family(
             m_targets=m_true,
         )
         fresh_est.set_params(**params_i_clean)
-        fresh_est.set_params(model__fit__callbacks=fresh_cbs)
+        try:
+            fresh_est.set_params(model__fit__callbacks=_make_fresh_callbacks())
+        except ValueError:
+            pass
         r2_list, rmse_list, y_true_oof, y_pred_oof = evaluate_oof_per_output(
             fresh_est, X_fit, Y_fit, groups, cv,
             m_true=m_true, augmented_2m=augmented_2m,
@@ -434,7 +439,10 @@ def run_family(
             m_targets=m_true,
         )
         refit_est.set_params(**params_i_clean)
-        refit_est.set_params(model__fit__callbacks=_make_fresh_callbacks())
+        try:
+            refit_est.set_params(model__fit__callbacks=_make_fresh_callbacks())
+        except ValueError:
+            pass
         refit_est.fit(X_fit, Y_fit)
         searchcv.best_estimator_ = refit_est
         searchcv.best_index_ = i
