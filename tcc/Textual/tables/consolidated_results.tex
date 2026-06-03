@@ -1,0 +1,26 @@
+\begin{table}[H]
+\centering
+\caption[Desempenho consolidado dos modelos]{Desempenho consolidado dos modelos avaliados, ordenados pelo RMSE do fluxo de permeado (OOF). As métricas OOF são calculadas sobre predições \textit{out-of-fold} conforme descrito na Seção~\ref{sec:avaliacao_oof}. O RMSE CV refere-se à média da validação cruzada durante a seleção de hiperparâmetros. Fonte: Autor.}
+\label{tab:resultados_consolidados}
+\begin{tabular}{l c c c c c c c}
+\hline
+\textbf{Modelo} &
+\multicolumn{2}{c}{\textbf{$Alim\_T_{out}$}} &
+\multicolumn{2}{c}{\textbf{$Ref\_T_{out}$}} &
+\multicolumn{2}{c}{\textbf{$Flux$}} &
+\textbf{RMSE CV} \\
+\cline{2-3} \cline{4-5} \cline{6-7}
+ & R$^2$ & RMSE & R$^2$ & RMSE & R$^2$ & RMSE & $Flux$ \\
+\hline
+\rowcolor{orange!15}
+ZohanResidual_Restricted & 0.957 & 0.273 & 0.988 & 0.433 & 0.971 & 0.069 & 0.065 \\
+ZohanHRNN_Restricted & 0.971 & 0.223 & 0.990 & 0.393 & 0.966 & 0.075 & 0.060 \\
+ZohanHPD_Restricted & 0.966 & 0.243 & 0.983 & 0.504 & 0.959 & 0.083 & 0.082 \\
+Luc_Restricted & 0.963 & 0.254 & 0.987 & 0.442 & 0.950 & 0.091 & 0.084 \\
+FrozenBaseline & 0.974 & 0.214 & 0.973 & 0.644 & 0.945 & 0.095 & 0.088 \\
+ZohanResidual_Dropout & 0.964 & 0.250 & 0.984 & 0.497 & 0.932 & 0.106 & 0.073 \\
+DropoutBaseline & 0.893 & 0.431 & 0.891 & 1.285 & 0.830 & 0.168 & 0.144 \\
+Modelo físico 0D & -0.498 & 1.613 & 0.943 & 0.927 & 0.719 & 0.215 & --- \\
+\hline
+\end{tabular}
+\end{table}
