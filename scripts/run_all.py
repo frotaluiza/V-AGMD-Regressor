@@ -314,7 +314,7 @@ def main():
 
     baseline_family = FamilySpec(
         name="KerasMLP_BaselineSearch", estimator=make_keras_mlp_estimator,
-        search="random", param_grid=keras_mlp_grid, n_iter=80,
+        search="random", param_grid=keras_mlp_grid, n_iter=120,
         x_mode="x", y_mode="true", complexity_fn=C_keras_mlp,
         n_jobs=1, scale_y=True,
     )
