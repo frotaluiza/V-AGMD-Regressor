@@ -285,15 +285,16 @@ def main():
     term_nan = tf.keras.callbacks.TerminateOnNaN()
 
     base_common = {
-        "model__model__activation": ["relu"],
-        "model__model__optimizer": ["adam"],
-        "model__model__learning_rate": [1e-3, 3e-4, 1e-4],
-        "model__model__l2": [0.0, 1e-6, 1e-5, 1e-4],
+        "model__model__activation": ["relu", "tanh"],
+        "model__model__optimizer": ["adam", "adamw"],
+        "model__model__learning_rate": [3e-3, 1e-3, 3e-4, 1e-4],
+        "model__model__l2": [0.0, 1e-6, 1e-5, 1e-4, 1e-3],
         "model__model__hidden_layer_sizes": [
-            (32,), (64,), (128,), (256,), (64, 32), (128, 64),
-            (256, 128), (128, 64, 32), (256, 128, 64),
+            (32,), (64,), (128,), (256,), (512,),
+            (64, 32), (128, 64), (256, 128), (512, 256),
+            (128, 64, 32), (256, 128, 64), (512, 256, 128),
         ],
-        "model__batch_size": [32, 64],
+        "model__batch_size": [16, 32, 64],
         "model__epochs": [200],
         "model__fit__validation_split": [0.2],
         "model__fit__shuffle": [True],
@@ -313,7 +314,7 @@ def main():
 
     baseline_family = FamilySpec(
         name="KerasMLP_BaselineSearch", estimator=make_keras_mlp_estimator,
-        search="random", param_grid=keras_mlp_grid, n_iter=50,
+        search="random", param_grid=keras_mlp_grid, n_iter=80,
         x_mode="x", y_mode="true", complexity_fn=C_keras_mlp,
         n_jobs=1, scale_y=True,
     )
