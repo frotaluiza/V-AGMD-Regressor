@@ -1,0 +1,77 @@
+\begin{table}[H]
+\centering
+\caption[RMSE de validação cruzada para todos os modelos]{RMSE de validação cruzada (CV) para todos os modelos avaliados, ordenados pelo desempenho no alvo $Flux$. Fonte: Autor.}
+\label{tab:cv_rmse_all}
+\begin{tabular}{l c c c}
+\hline
+\textbf{Modelo} & \textbf{$Flux$} & \textbf{$Alim\_T_{out}$} & \textbf{$Ref\_T_{out}$} \\
+\hline
+MLP_sklearn & 0.068 & --- & --- \\
+OLS & 0.082 & --- & --- \\
+Lasso_MultiTask & 0.083 & --- & --- \\
+Lasso & 0.083 & --- & --- \\
+Ridge & 0.090 & --- & --- \\
+ElasticNet & 0.100 & --- & --- \\
+ElasticNet_MultiTask & 0.104 & --- & --- \\
+GB & 0.342 & --- & --- \\
+RF & 0.412 & --- & --- \\
+DT & 0.484 & --- & --- \\
+\hline
+ZohanResidual & 0.061 & --- & --- \\
+ZohanHRNN & 0.064 & --- & --- \\
+Luc & 0.085 & --- & --- \\
+FrozenBaseline & 0.086 & --- & --- \\
+ZohanResidual_Dropout & 0.079 & --- & --- \\
+ZohanHPD & 0.076 & --- & --- \\
+DropoutBaseline & 0.148 & --- & --- \\
+\hline
+Modelo f'{\i}sico 0D & --- & --- & --- \\
+\hline
+\end{tabular}
+\end{table}
+
+\begin{table}[H]
+\centering
+\caption[Desempenho OOF consolidado]{Desempenho consolidado dos modelos avaliados com base nas predições \textit{out-of-fold} (OOF), ordenados pelo RMSE do fluxo de permeado. As métricas OOF são calculadas sobre predições de modelos retreinados independentemente em cada partição da validação cruzada (\cite{Cawley2010Overfitting}). Fonte: Autor.}
+\label{tab:oof_all}
+\begin{tabular}{l c c c c c c}
+\hline
+\textbf{Modelo} &
+\multicolumn{2}{c}{\textbf{$Alim\_T_{out}$}} &
+\multicolumn{2}{c}{\textbf{$Ref\_T_{out}$}} &
+\multicolumn{2}{c}{\textbf{$Flux$}} \\
+\cline{2-3} \cline{4-5} \cline{6-7}
+ & R$^2$ & RMSE & R$^2$ & RMSE & R$^2$ & RMSE \\
+\hline
+MLP_sklearn & 0.922 & 0.368 & 0.925 & 1.067 & 0.970 & 0.071 \\
+OLS & 0.965 & 0.246 & 0.996 & 0.251 & 0.952 & 0.089 \\
+Lasso_MultiTask & 0.965 & 0.245 & 0.996 & 0.251 & 0.951 & 0.090 \\
+Lasso & 0.965 & 0.248 & 0.995 & 0.279 & 0.951 & 0.090 \\
+Ridge & 0.962 & 0.257 & 0.989 & 0.401 & 0.938 & 0.101 \\
+ElasticNet & 0.949 & 0.298 & 0.982 & 0.516 & 0.923 & 0.112 \\
+ElasticNet_MultiTask & 0.955 & 0.278 & 0.988 & 0.423 & 0.918 & 0.116 \\
+GB & 0.746 & 0.664 & 0.986 & 0.460 & 0.131 & 0.378 \\
+RF & 0.329 & 1.080 & 0.675 & 2.219 & -0.412 & 0.482 \\
+DT & 0.208 & 1.173 & 0.796 & 1.761 & -0.696 & 0.528 \\
+\hline
+\multicolumn{7}{c}{} \\
+\multicolumn{7}{c}{\textbf{Modelos Híbridos}} \\
+\multicolumn{7}{c}{} \\
+\hline
+ \rowcolor{orange!15}
+ZohanResidual & 0.951 & 0.290 & 0.990 & 0.385 & 0.978 & 0.061 \\
+ZohanHRNN & 0.972 & 0.221 & 0.991 & 0.377 & 0.963 & 0.078 \\
+Luc & 0.931 & 0.347 & 0.985 & 0.482 & 0.954 & 0.087 \\
+FrozenBaseline & 0.968 & 0.237 & 0.990 & 0.394 & 0.949 & 0.091 \\
+ZohanResidual_Dropout & 0.969 & 0.233 & 0.984 & 0.491 & 0.944 & 0.096 \\
+ZohanHPD & 0.918 & 0.376 & 0.970 & 0.678 & 0.935 & 0.103 \\
+DropoutBaseline & 0.916 & 0.383 & 0.911 & 1.161 & 0.782 & 0.190 \\
+\hline
+\multicolumn{7}{c}{} \\
+\multicolumn{7}{c}{\textbf{Modelo Físico de Referência}} \\
+\multicolumn{7}{c}{} \\
+\hline
+Modelo f'{\i}sico 0D & -0.498 & 1.613 & 0.943 & 0.927 & 0.719 & 0.215 \\
+\hline
+\end{tabular}
+\end{table}
