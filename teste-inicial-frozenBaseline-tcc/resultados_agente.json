@@ -1,0 +1,121 @@
+{
+  "ZohanResidual": {
+    "cv_rmse": 0.0617,
+    "best_params": {
+      "model__model__optimizer": "adam",
+      "model__model__n_targets": 3,
+      "model__model__n_features": 8,
+      "model__model__loss": "huber",
+      "model__model__learning_rate": 0.001,
+      "model__model__l2": 1e-05,
+      "model__model__huber_delta": 1.0,
+      "model__model__hidden_layer_sizes": "[256]",
+      "model__model__activation": "tanh",
+      "model__fit__verbose": 0,
+      "model__fit__validation_split": 0.2,
+      "model__fit__shuffle": true,
+      "model__epochs": 200,
+      "model__batch_size": 32
+    },
+    "all_cv_scores": [
+      0.0735,
+      0.0654,
+      0.0692,
+      0.0617
+    ]
+  },
+  "ZohanHRNN": {
+    "cv_rmse": 0.0608,
+    "best_params": {
+      "model__model__optimizer": "adam",
+      "model__model__n_targets": 3,
+      "model__model__n_features": 8,
+      "model__model__loss": "huber",
+      "model__model__learning_rate": 0.001,
+      "model__model__l2": 1e-06,
+      "model__model__huber_delta": 1.0,
+      "model__model__hidden_layer_sizes": "[256]",
+      "model__model__activation": "tanh",
+      "model__fit__verbose": 0,
+      "model__fit__validation_split": 0.2,
+      "model__fit__shuffle": true,
+      "model__epochs": 200,
+      "model__batch_size": 32
+    },
+    "all_cv_scores": [
+      0.0727,
+      0.067,
+      0.0608,
+      0.0668
+    ]
+  },
+  "ZohanHPD": {
+    "cv_rmse": 0.073,
+    "best_params": {
+      "model__model__optimizer": "adam",
+      "model__model__n_targets": 3,
+      "model__model__n_features": 8,
+      "model__model__loss": "huber",
+      "model__model__learning_rate": 0.001,
+      "model__model__l2": 1e-06,
+      "model__model__huber_delta": 1.0,
+      "model__model__hidden_layer_sizes": "[256]",
+      "model__model__activation": "tanh",
+      "model__fit__verbose": 0,
+      "model__fit__validation_split": 0.2,
+      "model__fit__shuffle": true,
+      "model__epochs": 200,
+      "model__batch_size": 32
+    },
+    "all_cv_scores": [
+      0.0749,
+      0.0742,
+      0.073,
+      0.0892
+    ]
+  },
+  "Luc": {
+    "cv_rmse": 0.374,
+    "best_params": {
+      "model__model__physics_norm": "mae",
+      "model__model__omega": 0.3,
+      "model__model__n_targets": 3,
+      "model__model__n_features": 5,
+      "model__model__l2": 1e-06,
+      "model__model__data_loss": "huber"
+    },
+    "all_cv_scores": [
+      0.3932,
+      0.4643,
+      0.4457,
+      0.4261,
+      0.3879,
+      0.3758,
+      0.4293,
+      0.374,
+      0.4755,
+      0.4113
+    ],
+    "grid_expandido": {
+      "l2": [
+        0.0001,
+        0.0,
+        1e-06,
+        1e-05,
+        0.0001
+      ],
+      "omega": [
+        0.0,
+        0.1,
+        0.3,
+        0.5,
+        0.7
+      ],
+      "physics_norm": [
+        "mse",
+        "mae"
+      ],
+      "n_iter": 10
+    }
+  }
+}
