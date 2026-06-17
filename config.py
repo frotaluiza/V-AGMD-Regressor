@@ -60,3 +60,41 @@ FLUX_INDEX = TARGET_COLS.index("Flux")
 DEFAULT_GAP_FILTER_TOL = 0.02
 DEFAULT_USE_GAP_FILTER = False
 DEFAULT_USE_GAP_TIEBREAK = False
+
+# ============================================================
+# Parametros otimizados para baseline per-output
+# (encontrados pelo agente via busca exaustiva)
+# ============================================================
+BASELINE_OTIMIZADO = {
+    "flux": {
+        "framework": "keras",
+        "hidden_layer_sizes": [256],
+        "activation": "tanh",
+        "learning_rate": 0.005,
+        "l2": 1e-5,
+        "batch_size": 174,
+        "loss": "mse",
+        "epochs": 500,
+        "optimizer": "adam",
+        "patience": 20,
+        "reduce_lr_patience": 8,
+    },
+    "alim_t_out": {
+        "framework": "sklearn",
+        "hidden_layer_sizes": (256,),
+        "activation": "logistic",
+        "alpha": 0.1,
+        "learning_rate_init": 0.001,
+        "max_iter": 5000,
+        "early_stopping": True,
+    },
+    "ref_t_out": {
+        "framework": "sklearn",
+        "hidden_layer_sizes": (256,),
+        "activation": "logistic",
+        "alpha": 0.1,
+        "learning_rate_init": 0.005,
+        "max_iter": 5000,
+        "early_stopping": True,
+    },
+}

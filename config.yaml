@@ -24,8 +24,13 @@ columns:
 training:
   seed: 42
   n_splits: 3
-  early_stop_patience: 12
-  early_stop_min_delta: 0.0001
+  early_stop_patience: 20
+  early_stop_min_delta: 1e-5
   reduce_lr_factor: 0.5
-  reduce_lr_patience: 4
-  reduce_lr_min_lr: 0.000001
+  reduce_lr_patience: 8
+  reduce_lr_min_lr: 1e-6
+  
+  # Parametros otimizados por saida (encontrados pelo agente)
+  # Flux: keras [256] tanh lr=0.005 l2=1e-5 batch=174
+  # Alim_T_out: sklearn logistic alpha=0.1 (256,) lr=0.001
+  # Ref_T_out: sklearn logistic alpha=0.1 (256,) lr=0.005
