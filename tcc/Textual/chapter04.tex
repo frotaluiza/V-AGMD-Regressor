@@ -551,6 +551,18 @@ Caso múltiplas configurações apresentem a mesma complexidade mínima, utiliza
 
 A configuração \(\widehat{h}\) é então adotada como a configuração selecionada para a família de modelos considerada. Após a aplicação desse procedimento em cada família, os modelos resultantes, já com suas respectivas configurações selecionadas, são comparados entre si com base nas métricas de desempenho obtidas por validação cruzada. Dessa forma, o processo distingue duas etapas: primeiro, a seleção da configuração de hiperparâmetros dentro de cada família; depois, a comparação entre os modelos finais representantes de cada família.
 
+\subsection{Comparação entre Famílias por Contagem de Parâmetros}
+
+Enquanto a seleção dentro de cada família utilizou medidas de complexidade específicas para cada classe de modelo, a comparação entre famílias distintas empregou uma métrica universal: o número total de parâmetros treináveis de cada arquitetura. Essa abordagem permitiu posicionar modelos de naturezas fundamentalmente diferentes -- regressão linear, redes neurais e arquiteturas híbridas -- em uma mesma escala de complexidade.
+
+O número de parâmetros de cada modelo foi calculado analiticamente a partir de sua arquitetura. Para a regressão linear (\texttt{OLS}), com cinco variáveis de entrada e três saídas, o total é de 18 parâmetros (15 coeficientes e 3 interceptos). Para as redes neurais e arquiteturas híbridas, a contagem depende do número de neurônios em cada camada, sendo a quantidade de parâmetros de uma camada densa dada por \(n_{\mathrm{in}} \times n_{\mathrm{out}} + n_{\mathrm{out}}\).
+
+Como as buscas de hiperparâmetros foram conduzidas de forma independente para cada alvo, as arquiteturas selecionadas diferem entre si. Para os alvos \(T_{\mathrm{alim,out}}\) e \(T_{\mathrm{ref,out}}\), a configuração vencedora utiliza duas camadas ocultas com 128 e 64 neurônios e ativação \texttt{tanh}, totalizando 9219 parâmetros. Para o alvo \(Flux\), a configuração vencedora utiliza três camadas ocultas com 128, 64 e 32 neurônios e ativação \texttt{relu}, totalizando 11203 parâmetros.
+
+Nas arquiteturas híbridas que utilizam todas as oito variáveis de entrada (cinco experimentais mais três predições físicas), como HPD e HRNN, a primeira camada recebe três entradas adicionais, acrescentando 384 parâmetros ao total. Dessa forma, para as baselines de \(T_{\mathrm{alim,out}}\) e \(T_{\mathrm{ref,out}}\), as arquiteturas HPD e HRNN totalizam 9603 parâmetros; para a baseline de \(Flux\), totalizam 11587 parâmetros. A arquitetura residual (ZohanResidual), embora receba as oito variáveis como entrada, aplica a rede neural apenas ao subconjunto de cinco variáveis experimentais e combina a saída por soma à predição física -- o que resulta na mesma contagem de parâmetros da baseline neural correspondente a cada alvo (9219 ou 11203, respectivamente).
+
+Após o cálculo do número de parâmetros, aplicou-se novamente o critério baseado em um desvio padrão (1-SE), agora sobre o conjunto de todos os modelos candidatos de diferentes famílias. Entre os modelos dentro da margem de um desvio padrão do melhor desempenho, priorizou-se a arquitetura de menor número de parâmetros, retomando a lógica de parcimônia em uma escala comum de complexidade.
+
 \begin{figure}[H]
     \centering
     \includegraphics[width=1\linewidth]{Imagens/chap04/esquema_comp.png}
