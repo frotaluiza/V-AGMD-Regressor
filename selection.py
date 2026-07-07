@@ -62,7 +62,12 @@ def make_refit_1se_gapfilter_min_complexity_then_min_gap(
 
 
 # ---- Complexity functions ----
+# Baseiam-se no princípio de que complexidade cresce com a capacidade do modelo
+# (Hastie et al., 2009, Cap. 7): mais regularizacao -> menos complexo;
+# maior profundidade / mais neuronios / mais estimadores -> mais complexo.
+
 def _neg_log10_alpha(alpha, floor=1e-20):
+    """Quanto maior alpha (mais regularizacao), menor a complexidade."""
     a = max(float(alpha), floor)
     return -math.log10(a)
 
@@ -83,8 +88,7 @@ def C_lasso(params: Dict[str, Any]) -> float:
 
 def C_elasticnet(params: Dict[str, Any]) -> float:
     alpha = _get(params, "model__alpha", default=1.0)
-    l1_ratio = float(_get(params, "model__l1_ratio", default=0.5))
-    return _neg_log10_alpha(alpha) + 0.01 * (1.0 - l1_ratio)
+    return _neg_log10_alpha(alpha)
 
 
 def C_lasso_mo(params: Dict[str, Any]) -> float:
@@ -94,34 +98,35 @@ def C_lasso_mo(params: Dict[str, Any]) -> float:
 
 def C_elasticnet_mo(params: Dict[str, Any]) -> float:
     alpha = _get(params, "model__estimator__alpha", default=1.0)
-    l1_ratio = float(_get(params, "model__estimator__l1_ratio", default=0.5))
-    return _neg_log10_alpha(alpha) + 0.01 * (1.0 - l1_ratio)
+    return _neg_log10_alpha(alpha)
 
 
 def C_dt(params: Dict[str, Any]) -> float:
+    """Complexidade = profundidade maxima. None = arvore sem limite."""
     max_depth = _get(params, "model__max_depth", default=None)
-    min_leaf = float(_get(params, "model__min_samples_leaf", default=1))
-    d = 1e6 if max_depth is None else float(max_depth)
-    return d + 1e-3 * (-min_leaf)
+    if max_depth is None:
+        return 1e6
+    return float(max_depth)
 
 
 def C_rf(params: Dict[str, Any]) -> float:
+    """Complexidade = profundidade + contribuicao do numero de arvores."""
     n_estimators = float(_get(params, "model__n_estimators", default=100))
     max_depth = _get(params, "model__max_depth", default=None)
-    min_leaf = float(_get(params, "model__min_samples_leaf", default=1))
     d = 1e3 if max_depth is None else float(max_depth)
-    return d + 1e-3 * n_estimators + 1e-6 * (-min_leaf)
+    return d + float(n_estimators) * 1e-3
 
 
 def C_gb(params: Dict[str, Any]) -> float:
-    n_estimators = _get(params, "model__estimator__n_estimators", default=100)
+    """Complexidade = profundidade + contribuicao do numero de arvores."""
+    n_estimators = float(_get(params, "model__estimator__n_estimators", default=100))
     max_depth = _get(params, "model__estimator__max_depth", default=None)
-    n = float(n_estimators)
     d = 1e3 if max_depth is None else float(max_depth)
-    return d + 1e-3 * n
+    return d + n_estimators * 1e-3
 
 
 def C_mlp_proxy(params: Dict[str, Any]) -> float:
+    """Complexidade = numero total de neuronios + pequena penalidade por camada."""
     hls = _get(params, "model__hidden_layer_sizes", default=None)
     if hls is None:
         return 1e9
@@ -130,11 +135,18 @@ def C_mlp_proxy(params: Dict[str, Any]) -> float:
 
 
 def C_keras_mlp(params: Dict[str, Any]) -> float:
+    """Complexidade = total de neuronios + penalidade por camada - log10(l2).
+    
+    Combina capacidade da arquitetura com regularizacao L2: para uma mesma
+    arquitetura, maior L2 resulta em menor complexidade (modelo mais simples).
+    """
     hls = _get(params, "model__model__hidden_layer_sizes", default=(64, 32))
     if hls is None:
         return 1e9
     layers = (hls,) if isinstance(hls, int) else tuple(hls)
-    return float(sum(int(u) for u in layers) + 0.1 * len(layers))
+    n_neurons = float(sum(int(u) for u in layers) + 0.1 * len(layers))
+    l2 = float(_get(params, "model__model__l2", default=0.0))
+    return n_neurons - math.log10(max(l2, 1e-20))
 
 
 COMPLEXITY_MAP = {
@@ -276,6 +288,27 @@ class ProgressRandomizedSearchCV(RandomizedSearchCV):
 
 
 # ---- Scorers ----
+def make_neg_rmse_mean_all_targets_scorer(
+    n_true_targets: int,
+):
+    def _scorer(estimator, X, y):
+        y = np.asarray(y)
+        if y.ndim == 1:
+            y = y.reshape(-1, 1)
+        y_pred = estimator.predict(X)
+        y_pred = np.asarray(y_pred)
+        if y_pred.ndim == 1:
+            y_pred = y_pred.reshape(-1, 1)
+        m = int(n_true_targets)
+        rmse_per = np.array([
+            float(np.sqrt(np.mean((y[:len(y_pred), k] - y_pred[:len(y_pred), k]) ** 2)))
+            for k in range(m)
+        ])
+        return -float(np.mean(rmse_per))
+    _scorer.__name__ = "neg_rmse_mean_all_targets"
+    return _scorer
+
+
 def make_neg_rmse_single_true_target_scorer(
     target_index: int,
     n_true_targets: int,
