@@ -1,6 +1,6 @@
 \begin{table}[H]
 \centering
-\caption[Desempenho consolidado dos modelos]{Desempenho consolidado dos modelos avaliados, ordenados pelo RMSE do fluxo de permeado (OOF). As métricas OOF são calculadas sobre predições \textit{out-of-fold} conforme descrito na Seção~\ref{sec:avaliacao_oof}. O RMSE CV refere-se à média da validação cruzada durante a seleção de hiperparâmetros. Fonte: Autor.}
+\caption[Desempenho consolidado dos modelos]{Desempenho consolidado dos modelos com otimização por target (OOF). As métricas são calculadas sobre predições \textit{out-of-fold}. Fonte: Autor.}
 \label{tab:resultados_consolidados}
 \begin{tabular}{l c c c c c c c}
 \hline
@@ -8,18 +8,40 @@
 \multicolumn{2}{c}{\textbf{$Alim\_T_{out}$}} &
 \multicolumn{2}{c}{\textbf{$Ref\_T_{out}$}} &
 \multicolumn{2}{c}{\textbf{$Flux$}} &
-\textbf{RMSE CV} \\
+\textbf{Baseline} \\
 \cline{2-3} \cline{4-5} \cline{6-7}
- & R$^2$ & RMSE & R$^2$ & RMSE & R$^2$ & RMSE & $Flux$ \\
+ & R$^2$ & RMSE & R$^2$ & RMSE & R$^2$ & RMSE & \\
+\hline
+\multicolumn{8}{c}{\textbf{Modelos Clássicos (Stage 0)}} \\
+\hline
+OLS & 0.965 & 0.247 & 0.996 & 0.251 & 0.952 & 0.089 & Flux \\
+Ridge & 0.962 & 0.257 & 0.989 & 0.401 & 0.938 & 0.101 & Flux \\
+Lasso\_MultiTask & 0.965 & 0.245 & 0.996 & 0.251 & 0.951 & 0.090 & Flux \\
+MLP\_sklearn & 0.922 & 0.368 & 0.925 & 1.067 & 0.970 & 0.071 & Flux \\
+\hline
+\multicolumn{8}{c}{\textbf{Keras Baselines (Stage 1)}} \\
+\hline
+Keras MLP & 0.949 & 0.298 & 0.964 & 0.735 & 0.954 & 0.087 & Alim \\
+Keras MLP & 0.967 & 0.240 & 0.990 & 0.383 & 0.901 & 0.127 & Ref \\
+Keras MLP & 0.910 & 0.397 & 0.903 & 0.186 & 0.978 & 0.065 & Flux \\
+\hline
+\multicolumn{8}{c}{\textbf{Híbridos com Otimização por Target}} \\
 \hline
 \rowcolor{orange!15}
-ZohanResidual_Restricted & 0.957 & 0.273 & 0.988 & 0.433 & 0.971 & 0.069 & 0.065 \\
-ZohanHRNN_Restricted & 0.971 & 0.223 & 0.990 & 0.393 & 0.966 & 0.075 & 0.060 \\
-ZohanHPD_Restricted & 0.966 & 0.243 & 0.983 & 0.504 & 0.959 & 0.083 & 0.082 \\
-Luc_Restricted & 0.963 & 0.254 & 0.987 & 0.442 & 0.950 & 0.091 & 0.084 \\
-FrozenBaseline & 0.974 & 0.214 & 0.973 & 0.644 & 0.945 & 0.095 & 0.088 \\
-ZohanResidual_Dropout & 0.964 & 0.250 & 0.984 & 0.497 & 0.932 & 0.106 & 0.073 \\
-DropoutBaseline & 0.893 & 0.431 & 0.891 & 1.285 & 0.830 & 0.168 & 0.144 \\
+\textbf{ZohanResidual} & \textbf{0.981} & \textbf{0.141} & 0.989 & 0.317 & 0.972 & 0.060 & Alim \\
+ZohanHRNN & 0.975 & 0.161 & 0.995 & 0.211 & 0.968 & 0.064 & Alim \\
+ZohanHPD & 0.970 & 0.177 & 0.989 & 0.317 & 0.970 & 0.063 & Alim \\
+ZohanResidual & 0.971 & 0.240 & 0.993 & 0.264 & 0.976 & 0.056 & Ref \\
+ZohanHPD & 0.970 & 0.243 & 0.986 & 0.371 & 0.963 & 0.071 & Ref \\
+\rowcolor{green!15}
+\textbf{ZohanHPD} & 0.970 & 0.155 & 0.991 & 0.295 & \textbf{0.982} & \textbf{0.060} & Flux \\
+ZohanResidual & 0.972 & 0.151 & 0.989 & 0.324 & 0.981 & 0.061 & Flux \\
+PhyLoss ($\omega{=}0{,}0$) & 0.976 & 0.204 & 0.987 & 0.439 & 0.971 & 0.069 & Alim \\
+PhyLoss ($\omega{=}0{,}7$) & 0.936 & 0.335 & 0.991 & 0.361 & 0.726 & 0.212 & Ref \\
+PhyLoss ($\omega{=}0{,}0$) & 0.977 & 0.200 & 0.984 & 0.496 & 0.975 & 0.064 & Flux \\
+\hline
+\multicolumn{8}{c}{\textbf{Modelo Físico de Referência}} \\
+\hline
 Modelo físico 0D & -0.498 & 1.613 & 0.943 & 0.927 & 0.719 & 0.215 & --- \\
 \hline
 \end{tabular}
